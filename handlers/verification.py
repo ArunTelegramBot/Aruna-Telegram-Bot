@@ -2,7 +2,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, MessageHandler, CallbackQueryHandler, filters
 
 # Admin Group ID
-ADMIN_GROUP_ID = --1002594045216  # Replace with the real admin group ID
+ADMIN_GROUP_ID = -1002594045216  # Replace with the real admin group ID
 GROUP_LINK = "https://t.me/+61u9NBdnb2wxMWJl"  # Replace with the real group link ID
 
 # Store pending transactions
