@@ -3,7 +3,7 @@ from telegram.ext import CallbackContext, MessageHandler, CallbackQueryHandler, 
 
 # Admin Group ID
 ADMIN_GROUP_ID = -1002594045216  # Replace with the real admin group ID
-GROUP_LINK = "https://t.me/+61u9NBdnb2wxMWJl"  # Replace with the real group link ID
+GROUP_LINK = "https://t.me/+kbMWRA7RG0FiZTM1"  # Replace with the real group link ID
 
 # Store pending transactions
 pending_transactions = {}
