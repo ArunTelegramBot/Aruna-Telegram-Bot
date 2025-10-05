@@ -15,6 +15,7 @@ async def start_command(update: Update, context: CallbackContext):
         "2️⃣ Make your naughty payment – quick & easy! 💸\n"
         "3️⃣ Send proof to join my secret world! 😏\n"
         "4️⃣ Get instant access to the VIP group for some fun! 😉\n\n"
+        "⭐ Rated 4.6 by 2.3k thrilled fans! 😍\n\n"
         "✅ Use /payment for all the juicy payment details.\n"
         "🔥 Your payment gets a sexy review by me before you’re in!\n\n"
         "👇 *Tap below to dive into the temptation NOW:*",
