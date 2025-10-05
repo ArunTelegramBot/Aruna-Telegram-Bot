@@ -2,71 +2,137 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
 
 SUBSCRIPTION_OPTIONS = [
-    [InlineKeyboardButton("✅ 1 Week – ₹259", callback_data="sub_1w")],
-    [InlineKeyboardButton("✅ 1 Month – ₹369", callback_data="sub_1m")]
+    [InlineKeyboardButton("✅ 1 Week – ₹199", callback_data="sub_1w"),
+     InlineKeyboardButton("✅ 1 Month – ₹299", callback_data="sub_1m")]
 ]
 
 PAYMENT_METHODS = [
-    [InlineKeyboardButton("📸 Pay via QR Code", callback_data="pay_qr")],
-    [InlineKeyboardButton("🏦 Pay via UPI ID", callback_data="pay_upi")]
+    [InlineKeyboardButton("📸 Pay via QR Code", callback_data="pay_qr"),
+     InlineKeyboardButton("🏦 Pay via UPI ID", callback_data="pay_upi")]
 ]
 
 async def payment_info(update: Update, context: CallbackContext):
-    """Mostra os planos de assinatura disponíveis."""
+    """Show the available subscription plans."""
+    # Handle both command and callback query scenarios
     query = update.callback_query
+    message = update.effective_message or (query.message if query else None)
+    
+    text = (
+        "📜 *Dive into Aruna’s Naughty Pleasure Plans!* 😈❤️\n\n"
+        "\n"
+        "✅ *1 Week – ₹199 (~₹28/day):*\n"
+        "   A sizzling tease to ignite your desires! 🔥\n\n"
+        "\n"
+        "✅ *1 Month – ₹299 (~₹10/day):*\n"
+        "   Endless heat & savings to drive you wild! 💋\n\n"
+        "\n"
+        "👇 *Tap below to unleash the lusty fun NOW:*"
+    )
+    
     if query:
         await query.answer()
-
-    text = "📜 *Choose your subscription plan:*\n\n"
-    text += "✅ 1 Week – ₹259\n✅ 1 Month – ₹369\n\n"
-    text += "Please select an option below:"
-
-    await update.effective_message.reply_text(
-        text,
-        parse_mode="Markdown",
-        reply_markup=InlineKeyboardMarkup(SUBSCRIPTION_OPTIONS)
-    )
+        # Edit the existing message if this is a callback
+        await query.edit_message_text(
+            text,
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(SUBSCRIPTION_OPTIONS)
+        )
+    elif message:
+        # If called as a command (e.g., /payment), reply to the message
+        await message.reply_text(
+            text,
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(SUBSCRIPTION_OPTIONS)
+        )
+    else:
+        # Fallback: Send a new message
+        await update.message.reply_text(
+            text,
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(SUBSCRIPTION_OPTIONS)
+        )
 
 async def handle_payment_selection(update: Update, context: CallbackContext):
-    """Mostra os métodos de pagamento depois que o usuário escolhe um plano."""
+    """Show payment methods after the user selects a plan."""
     query = update.callback_query
-    if query:
-        await query.answer()
+    if not query:
+        return  # Ignore if not a callback query
 
-    plan_text = "✅ *Selected Plan:* 1 Week – ₹259" if query.data == "sub_1w" else "✅ *Selected Plan:* 1 Month – ₹369"
+    await query.answer()
 
-    text = f"{plan_text}\n\nChoose your preferred payment method:"
+    # Determine the selected plan with updated prices and descriptions
+    if query.data == "sub_1w":
+        plan_text = (
+            "✅ *Selected Plan:* 1 Week – ₹199 (~₹28/day)\n\n"
+            "🔥 A sizzling tease to ignite your desires!\n\n"
+        )
+    elif query.data == "sub_1m":
+        plan_text = (
+            "✅ *Selected Plan:* 1 Month – ₹299 (~₹10/day)\n\n"
+            "💋 Endless heat & savings to drive you wild!\n\n"
+        )
+    else:
+        await query.edit_message_text("❌ Invalid plan selection. Please try again.")
+        return
 
-    await update.effective_message.reply_text(
-        text,
+    # Edit the message to show payment methods
+    await query.edit_message_text(
+        f"{plan_text}\nChoose your preferred payment method:",
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup(PAYMENT_METHODS)
     )
 
 async def handle_payment_method(update: Update, context: CallbackContext):
-    """Executa a ação do pagamento com base na escolha do usuário."""
+    """Handle the payment action based on user choice."""
     query = update.callback_query
-    if query:
-        await query.answer()
+    if not query:
+        return  # Ignore if not a callback query
+
+    await query.answer()
 
     if query.data == "pay_qr":
-        await update.effective_message.reply_photo(
-            photo=open("assets/QR_Code.jpg", "rb"),
-            caption="📸 *Scan this QR Code to make the payment.*\n\n"
-                    "After payment, send a screenshot for verification.",
-            parse_mode="Markdown"
-        )
+        # Send the QR code photo as a new message
+        try:
+            await query.message.reply_photo(
+                photo=open("assets/QR_Code.jpg", "rb"),  # Ensure this file exists in your project
+                caption="📸 *Scan this QR Code to make the payment.*\n\n"
+                        "After payment, send a screenshot for verification. An admin will review it soon! 😘",
+                parse_mode="Markdown"
+            )
+        except FileNotFoundError:
+            await query.message.reply_text(
+                "❌ QR Code image not found. Please contact support for payment details.",
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            print(f"Error sending QR code: {e}")
+            await query.message.reply_text(
+                "❌ An error occurred while loading the QR code. Try UPI or contact support.",
+                parse_mode="Markdown"
+            )
     elif query.data == "pay_upi":
-        await update.effective_message.reply_text(
+        # Send UPI details as a new message
+        await query.message.reply_text(
             "🏦 *Manual Payment via UPI*\n\n"
             "Send your payment to the following UPI ID:\n"
             "`fansclub9@axl`\n\n"
-            "After payment, send a screenshot for verification.",
+            "After payment, send a screenshot for verification. An admin will review it soon! 😘",
             parse_mode="Markdown"
         )
-    
-    if query.message: 
-        try:
-            await query.edit_message_text("✅ Payment method selected successfully.")
-        except Exception as e:
-            print(f"Erro ao editar mensagem: {e}")  
+    else:
+        await query.edit_message_text("❌ Invalid payment method. Please try again.")
+        return
+
+    # Edit the original query message to confirm selection (optional, for better UX)
+    try:
+        await query.edit_message_text(
+            "✅ *Payment method selected successfully!*\n\n"
+            "Follow the instructions above and send proof of payment to get VIP access. 🔥"
+        )
+    except Exception as e:
+        print(f"Error editing confirmation message: {e}")
+        # Fallback: Send a new confirmation message
+        await query.message.reply_text(
+            "✅ Payment method selected! Check the details above. 💸",
+            parse_mode="Markdown"
+        )
