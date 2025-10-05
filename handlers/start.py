@@ -9,15 +9,15 @@ async def start_command(update: Update, context: CallbackContext):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text(
-        "🎉 *Welcome to Our Exclusive Service!* 🎉\n\n"
-        "💰 *How It Works:*\n"
-        "1️⃣ Choose a subscription plan.\n"
-        "2️⃣ Complete your payment.\n"
-        "3️⃣ Send proof of payment.\n"
-        "4️⃣ Get access to the VIP group!\n\n"
-        "✅ Use /payment to check payment details.\n"
-        "🔹 Your payment will be reviewed by an admin before approval.\n\n"
-        "👇 *Select an option below:*",
+        "🎉 *Hey gorgeous! Welcome to Aruna’s Spicy VIP Playground!* 🔥😘\n\n"
+        "💦 *How to Unlock the Heat:*\n"
+        "1️⃣ Pick your steamy subscription plan! 🌶️\n"
+        "2️⃣ Make your naughty payment – quick & easy! 💸\n"
+        "3️⃣ Send proof to join my secret world! 😏\n"
+        "4️⃣ Get instant access to the VIP group for some fun! 😉\n\n"
+        "✅ Use /payment for all the juicy payment details.\n"
+        "🔥 Your payment gets a sexy review by me before you’re in!\n\n"
+        "👇 *Tap below to dive into the temptation NOW:*",
         parse_mode="Markdown",
         reply_markup=reply_markup
     )
