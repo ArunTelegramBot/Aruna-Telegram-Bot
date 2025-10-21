@@ -16,7 +16,6 @@ SUBSCRIPTION_OPTIONS = [
 pending_transactions = {}
 
 async def payment_info(update: Update, context: CallbackContext):
-    """Send subscription options."""
     text = (
         "📜 *Dive into Aruna’s Naughty Pleasure Plans!* 😈❤️\n\n"
         "✅ *1 Week – ₹199 (~₹28/day)*: A sizzling tease!\n"
@@ -27,9 +26,7 @@ async def payment_info(update: Update, context: CallbackContext):
     message = update.effective_message or update.message
     await message.reply_text(text, parse_mode="Markdown", reply_markup=markup)
 
-
 async def handle_payment_selection(update: Update, context: CallbackContext):
-    """Send payment options based on selected plan."""
     query = update.callback_query
     await query.answer()
 
@@ -47,11 +44,9 @@ async def handle_payment_selection(update: Update, context: CallbackContext):
         await query.edit_message_text("❌ Invalid plan selection.")
         return
 
-    # Save selected plan for verification
     user_id = query.from_user.id
     pending_transactions[user_id] = {"plan": plan_name, "amount": amount}
 
-    # Payment buttons
     buttons = [
         [
             InlineKeyboardButton("📸 Pay via QR Code", callback_data=f"pay_qr_{amount}"),
@@ -68,16 +63,13 @@ async def handle_payment_selection(update: Update, context: CallbackContext):
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-
 async def handle_payment_method(update: Update, context: CallbackContext):
-    """Handle QR code or UPI payments."""
     query = update.callback_query
     await query.answer()
     data = query.data
     amount = data.split("_")[-1]
 
     if data.startswith("pay_qr"):
-        # Correct QR code path
         qr_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "QR_Code.jpg")
         try:
             await query.message.reply_photo(
@@ -94,7 +86,6 @@ async def handle_payment_method(update: Update, context: CallbackContext):
             reply_markup=InlineKeyboardMarkup(buttons)
         )
 
-    # Edit original message for confirmation
     await query.edit_message_text(
         f"✅ Payment method selected for ₹{amount}. Follow instructions below.",
     )
