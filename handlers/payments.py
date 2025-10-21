@@ -54,12 +54,12 @@ async def handle_payment_selection(update: Update, context: CallbackContext):
         plan_name = "1 Week"
         amount = 199
         description = "🔥 A sizzling tease to ignite your desires!"
-        direct_pay_link = "https://yourdomain.com/upi199.html"  # <-- redirect page URL
+        direct_pay_link = "https://www.upi.me/pay?pa=BHARATPE09895529437@yesbankltd&am=199&tn=VIP%20subscription"
     elif query.data == "sub_1m":
         plan_name = "1 Month"
         amount = 299
         description = "💋 Endless heat & savings to drive you wild!"
-        direct_pay_link = "https://yourdomain.com/upi299.html"  # <-- redirect page URL
+        direct_pay_link = "https://www.upi.me/pay?pa=BHARATPE09895529437@yesbankltd&am=299&tn=VIP%20subscription"
     else:
         await query.edit_message_text("❌ Invalid plan selection. Please try again.")
         return
