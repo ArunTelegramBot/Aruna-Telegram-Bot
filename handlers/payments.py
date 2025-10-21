@@ -1,9 +1,18 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CallbackContext
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, CallbackContext
+import logging
+
+# Enable logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 # Your UPI ID
 UPI_ID = "BHARATPE09895529437@yesbankltd"
 
+# Subscription buttons
 SUBSCRIPTION_OPTIONS = [
     [
         InlineKeyboardButton("✅ 1 Week – ₹199", callback_data="sub_1w"),
@@ -11,6 +20,7 @@ SUBSCRIPTION_OPTIONS = [
     ]
 ]
 
+# Command to show subscription plans
 async def payment_info(update: Update, context: CallbackContext):
     """Show available subscription plans."""
     query = update.callback_query
@@ -34,6 +44,7 @@ async def payment_info(update: Update, context: CallbackContext):
         await update.message.reply_text(text, parse_mode="Markdown", reply_markup=markup)
 
 
+# Handle plan selection
 async def handle_payment_selection(update: Update, context: CallbackContext):
     """Show payment methods and direct payment link."""
     query = update.callback_query
@@ -54,7 +65,7 @@ async def handle_payment_selection(update: Update, context: CallbackContext):
         await query.edit_message_text("❌ Invalid plan selection. Please try again.")
         return
 
-    # Create UPI payment deep link (opens any UPI app directly)
+    # Create UPI payment deep link
     upi_url = (
         f"upi://pay?pa={UPI_ID}&pn=Aruna&am={amount}&cu=INR&tn={plan_name.replace(' ', '%20')}%20Subscription"
     )
@@ -79,6 +90,7 @@ async def handle_payment_selection(update: Update, context: CallbackContext):
     )
 
 
+# Handle payment buttons (QR or UPI)
 async def handle_payment_method(update: Update, context: CallbackContext):
     """Handle manual payment methods (QR or UPI)."""
     query = update.callback_query
@@ -86,7 +98,6 @@ async def handle_payment_method(update: Update, context: CallbackContext):
         return
 
     await query.answer()
-
     data = query.data
 
     if data.startswith("pay_qr"):
@@ -103,9 +114,10 @@ async def handle_payment_method(update: Update, context: CallbackContext):
                 parse_mode="Markdown"
             )
     elif data.startswith("pay_upi"):
+        amount = data.split("_")[-1]
         await query.message.reply_text(
             f"🏦 *Manual Payment via UPI*\n\n"
-            f"Send ₹{data.split('_')[-1]} to the following UPI ID:\n"
+            f"Send ₹{amount} to the following UPI ID:\n"
             f"`{UPI_ID}`\n\n"
             "After payment, send a screenshot for verification. 😘",
             parse_mode="Markdown"
@@ -121,4 +133,24 @@ async def handle_payment_method(update: Update, context: CallbackContext):
             parse_mode="Markdown"
         )
     except Exception as e:
-        print(f"Error editing confirmation message: {e}")
+        logger.error(f"Error editing confirmation message: {e}")
+
+
+# Main function to run the bot
+def main():
+    TOKEN = "YOUR_BOT_TOKEN_HERE"  # <-- Replace with your bot token
+    app = ApplicationBuilder().token(TOKEN).build()
+
+    # Commands
+    app.add_handler(CommandHandler("payment", payment_info))
+
+    # Callbacks
+    app.add_handler(CallbackQueryHandler(handle_payment_selection, pattern="^sub_"))
+    app.add_handler(CallbackQueryHandler(handle_payment_method, pattern="^pay_"))
+
+    print("🤖 Bot is running...")
+    app.run_polling()
+
+
+if __name__ == "__main__":
+    main()
