@@ -115,7 +115,7 @@ async def handle_payment_method(update: Update, context: CallbackContext):
         await query.message.reply_text(
             "🏦 *Manual Payment via UPI*\n\n"
             "Send your payment to the following UPI ID:\n"
-            "`> A:BHARATPE09895529437@yesbankltd`\n\n"
+            "`BHARATPE09895529437@yesbankltd`\n\n"
             "After payment, send a screenshot for verification. An admin will review it soon! 😘",
             parse_mode="Markdown"
         )
