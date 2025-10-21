@@ -94,7 +94,9 @@ async def handle_payment_method(update: Update, context: CallbackContext):
             await query.message.reply_photo(
                 photo=open("assets/QR_Code.jpg", "rb"),
                 caption="📸 *Scan this QR Code to make the payment.*\n\n"
-                        "After payment, send a screenshot for verification. An admin will review it soon! 😘",
+                        "After payment, send a screenshot for verification. An admin will review it soon! 😘\n\n"
+                        "✅ *Payment method selected successfully!*\n\n"
+                        "Follow the instructions above and send proof of payment to get VIP access. 🔥",
                 parse_mode="Markdown"
             )
         except FileNotFoundError:
@@ -107,18 +109,14 @@ async def handle_payment_method(update: Update, context: CallbackContext):
             f"🏦 *Manual Payment via UPI*\n\n"
             f"Send ₹{data.split('_')[-1]} to the following UPI ID:\n"
             f"`{UPI_ID}`\n\n"
-            "After payment, send a screenshot for verification. 😘",
+            "After payment, send a screenshot for verification. 😘\n\n"
+            "✅ *Payment method selected successfully!*\n\n"
+            "Follow the instructions above and send proof of payment to get VIP access. 🔥",
             parse_mode="Markdown"
         )
     else:
         await query.edit_message_text("❌ Invalid payment method. Please try again.")
         return
 
-    try:
-        await query.edit_message_text(
-            "✅ *Payment method selected successfully!*\n\n"
-            "Follow the instructions above and send proof of payment to get VIP access. 🔥",
-            parse_mode="Markdown"
-        )
-    except Exception as e:
-        print(f"Error editing confirmation message: {e}")
+    # Removed the separate edit_message_text as it was causing potential issues (e.g., editing after replying).
+    # Instead, integrated the confirmation message into the reply captions/text.
