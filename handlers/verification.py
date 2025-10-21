@@ -2,8 +2,8 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, MessageHandler, CallbackQueryHandler, filters
 
 # Admin Group ID
-ADMIN_GROUP_ID = -1002594045216  # Replace with the real admin group ID
-GROUP_LINK = "https://t.me/+kbMWRA7RG0FiZTM1"  # Replace with the real group link ID
+ADMIN_GROUP_ID = -1002594045216  # Replace with your actual admin group ID
+GROUP_LINK = "https://t.me/+kbMWRA7RG0FiZTM1"  # Replace with actual access group link
 
 # Store pending transactions
 pending_transactions = {}
@@ -14,21 +14,21 @@ async def verify_payment(update: Update, context: CallbackContext):
     user_id = user.id
 
     if update.message.photo:
-        # User sent a screenshot
+        # Reply to user
         await update.message.reply_text(
             "📸 *Payment screenshot received!*\n"
             "Sending to admin for review...",
             parse_mode="Markdown"
         )
 
-        # Get the highest quality image
+        # Get highest quality photo
         photo = update.message.photo[-1]
         file = await photo.get_file()
 
-        # Store transaction for reference
+        # Store pending transaction
         pending_transactions[user_id] = file.file_id
 
-        # Send the image to the admin group
+        # Inline buttons for admin
         keyboard = [
             [
                 InlineKeyboardButton("✅ Approve", callback_data=f"approve_{user_id}"),
@@ -37,6 +37,7 @@ async def verify_payment(update: Update, context: CallbackContext):
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
+        # Send to admin group
         await context.bot.send_photo(
             chat_id=ADMIN_GROUP_ID,
             photo=file.file_id,
@@ -77,7 +78,7 @@ async def handle_approval(update: Update, context: CallbackContext):
         try:
             await query.edit_message_text("❌ Payment rejected.")
         except Exception as e:
-            print(f"Warning: Tried to edit a deleted message. {e}")  # Apenas loga o erro
+            print(f"Warning: Tried to edit a deleted message. {e}")
 
     # Remove from pending transactions
     pending_transactions.pop(user_id, None)
@@ -85,10 +86,10 @@ async def handle_approval(update: Update, context: CallbackContext):
     await query.answer()
 
 
-
 # Handlers
 verification_handler = MessageHandler(filters.PHOTO, verify_payment)
 approval_handler = CallbackQueryHandler(handle_approval, pattern="^(approve|reject)_")
 
 def get_callback_handlers():
+    """Return list of handlers to be added in main.py"""
     return [verification_handler, approval_handler]
