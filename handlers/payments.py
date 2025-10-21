@@ -1,14 +1,15 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, CallbackContext
+from verification import get_callback_handlers
 import logging
 
-# Logging setup
+# Logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-# Your UPI ID
+# UPI ID
 UPI_ID = "BHARATPE09895529437@yesbankltd"
 
 # Subscription buttons
@@ -19,7 +20,7 @@ SUBSCRIPTION_OPTIONS = [
     ]
 ]
 
-# Command to show subscription plans
+# Command: /payment
 async def payment_info(update: Update, context: CallbackContext):
     query = update.callback_query
     message = update.effective_message or (query.message if query else None)
@@ -64,7 +65,7 @@ async def handle_payment_selection(update: Update, context: CallbackContext):
         await query.edit_message_text("❌ Invalid plan selection. Please try again.")
         return
 
-    # Buttons
+    # Payment buttons
     payment_methods = [
         [
             InlineKeyboardButton("📸 Pay via QR Code", callback_data=f"pay_qr_{amount}"),
@@ -84,7 +85,7 @@ async def handle_payment_selection(update: Update, context: CallbackContext):
     )
 
 
-# Handle payment buttons (QR or UPI)
+# Handle payment buttons
 async def handle_payment_method(update: Update, context: CallbackContext):
     query = update.callback_query
     if not query:
@@ -98,7 +99,7 @@ async def handle_payment_method(update: Update, context: CallbackContext):
             await query.message.reply_photo(
                 photo=open("assets/QR_Code.jpg", "rb"),
                 caption="📸 *Scan this QR Code to make the payment.*\n\n"
-                        "After payment, send a screenshot for verification. An admin will review it soon! 😘",
+                        "After payment, send a screenshot for verification. 😘",
                 parse_mode="Markdown"
             )
         except FileNotFoundError:
@@ -131,15 +132,17 @@ async def handle_payment_method(update: Update, context: CallbackContext):
 
 # Main function
 def main():
-    TOKEN = "YOUR_BOT_TOKEN_HERE"  # <-- Replace with your bot token
+    TOKEN = "YOUR_BOT_TOKEN_HERE"  # Replace with your bot token
     app = ApplicationBuilder().token(TOKEN).build()
 
-    # Commands
+    # Payment handlers
     app.add_handler(CommandHandler("payment", payment_info))
-
-    # Callback handlers
     app.add_handler(CallbackQueryHandler(handle_payment_selection, pattern="^sub_"))
     app.add_handler(CallbackQueryHandler(handle_payment_method, pattern="^pay_"))
+
+    # Verification handlers (from verification.py)
+    for handler in get_callback_handlers():
+        app.add_handler(handler)
 
     print("🤖 Bot is running...")
     app.run_polling()
