@@ -4,7 +4,6 @@ import uvicorn
 from quart import Quart, request
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler
-from telegram import BotCommand
 
 from handlers.verification import get_callback_handlers
 from handlers.start import start_command
@@ -21,10 +20,4 @@ WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 PORT = int(os.getenv("PORT", 5000))
 
 if not TOKEN or not WEBHOOK_URL:
-    logging.error("❌ BOT_TOKEN or WEBHOOK_URL not defined.")
-    exit(1)
-
-bot_app = Application.builder().token(TOKEN).build()
-
-# --- Command Handlers ---
-bot_app.add_handler(CommandHandler("start",
+    logging.error("❌ BOT_TOKEN or WEBHOOK_URL not defined."
