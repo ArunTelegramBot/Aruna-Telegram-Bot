@@ -1,40 +1,30 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext, MessageHandler, CallbackQueryHandler, filters
-from .payments import pending_transactions  # Import the dict to know plan/amount
+from .payments import pending_transactions
 
-ADMIN_GROUP_ID = -1002594045216  # Replace with your admin group ID
-GROUP_LINK = "https://t.me/+kbMWRA7RG0FiZTM1"  # Replace with your VIP group link
+ADMIN_GROUP_ID = -1002594045216
+GROUP_LINK = "https://t.me/+kbMWRA7RG0FiZTM1"
 
 async def verify_payment(update: Update, context: CallbackContext):
-    """Handles payment verification via screenshot upload."""
     user_id = update.message.from_user.id
     username = update.message.from_user.username
 
-    # NEW: Check if there's a pending transaction
     if user_id not in pending_transactions:
         await update.message.reply_text("❌ No pending payment to verify. Please select a plan first.")
         return
 
     if update.message.photo:
-        # Get highest quality photo
         photo = update.message.photo[-1]
         file = await photo.get_file()
+        plan_info = pending_transactions[user_id]
+        plan_name, amount = plan_info["plan"], plan_info["amount"]
 
-        # Get user's plan
-        plan_info = pending_transactions.get(user_id, {"plan": "Unknown", "amount": "Unknown"})
-        plan_name = plan_info["plan"]
-        amount = plan_info["amount"]
-
-        # Inline buttons for admin
         keyboard = [
-            [
-                InlineKeyboardButton("✅ Approve", callback_data=f"approve_{user_id}"),
-                InlineKeyboardButton("❌ Reject", callback_data=f"reject_{user_id}")
-            ]
+            [InlineKeyboardButton("✅ Approve", callback_data=f"approve_{user_id}"),
+             InlineKeyboardButton("❌ Reject", callback_data=f"reject_{user_id}")]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        # Send screenshot to admin
         await context.bot.send_photo(
             chat_id=ADMIN_GROUP_ID,
             photo=file.file_id,
@@ -48,7 +38,6 @@ async def verify_payment(update: Update, context: CallbackContext):
         )
 
 async def handle_approval(update: Update, context: CallbackContext):
-    """Handle admin approve/reject."""
     query = update.callback_query
     action, user_id = query.data.split("_")
     user_id = int(user_id)
@@ -66,12 +55,10 @@ async def handle_approval(update: Update, context: CallbackContext):
         )
         await query.edit_message_text("❌ Payment rejected.")
 
-    # Remove from pending transactions
     pending_transactions.pop(user_id, None)
     await query.answer()
 
-# Handlers
-verification_handler = MessageHandler(filters.PHOTO, verify_payment)
+verification_handler = MessageHandler(filters.PHOTO & ~filters.COMMAND, verify_payment)
 approval_handler = CallbackQueryHandler(handle_approval, pattern="^(approve|reject)_")
 
 def get_callback_handlers():
