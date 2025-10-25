@@ -9,7 +9,7 @@ from handlers.verification import get_callback_handlers
 from handlers.start import start_command
 from handlers.menu import menu_button_handler
 from handlers.help import help_command
-from handlers.payments import payment_info, handle_payment_selection, handle_payment_method
+from handlers.payments import payment_info, handle_payment_selection, handle_payment_method, handle_upload_screenshot
 
 logging.basicConfig(level=logging.INFO)
 
@@ -41,6 +41,10 @@ bot_app.add_handler(
 bot_app.add_handler(
     CallbackQueryHandler(handle_payment_method, pattern="^(pay_qr_|pay_upi_)")
 )
+# Add handler for upload_screenshot button
+bot_app.add_handler(
+    CallbackQueryHandler(handle_upload_screenshot, pattern="^upload_screenshot$")
+)
 
 # --- Verification Handlers ---
 for handler in get_callback_handlers():
@@ -66,13 +70,11 @@ async def webhook():
 def start():
     logging.info("🚀 Starting bot and server...")
     try:
-        bot_app.initialize()
-        bot_app.run_webhook(
-            listen="0.0.0.0",
-            port=PORT,
-            url_path="webhook",
-            webhook_url=f"{WEBHOOK_URL}/webhook"
-        )
+        # Set up webhook
+        await bot_app.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
+        logging.info("✅ Webhook set successfully")
+        
+        # Start the Quart app
         uvicorn.run(app, host="0.0.0.0", port=PORT)
     except Exception as e:
         logging.error(f"❌ Error starting bot: {e}")
