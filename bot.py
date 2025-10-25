@@ -32,19 +32,10 @@ bot_app.add_handler(CommandHandler("payment", payment_info))
 bot_app.add_handler(CommandHandler("help", help_command))
 
 # --- CallbackQuery Handlers ---
-bot_app.add_handler(
-    CallbackQueryHandler(menu_button_handler, pattern="^(payment_info|help_info)$")
-)
-bot_app.add_handler(
-    CallbackQueryHandler(handle_payment_selection, pattern="^(sub_1w|sub_1m)$")
-)
-bot_app.add_handler(
-    CallbackQueryHandler(handle_payment_method, pattern="^(pay_qr_|pay_upi_)")
-)
-# Add handler for upload_screenshot button
-bot_app.add_handler(
-    CallbackQueryHandler(handle_upload_screenshot, pattern="^upload_screenshot$")
-)
+bot_app.add_handler(CallbackQueryHandler(menu_button_handler, pattern="^(payment_info|help_info)$"))
+bot_app.add_handler(CallbackQueryHandler(handle_payment_selection, pattern="^(sub_1w|sub_1m)$"))
+bot_app.add_handler(CallbackQueryHandler(handle_payment_method, pattern="^(pay_qr_|pay_upi_)$"))
+bot_app.add_handler(CallbackQueryHandler(handle_upload_screenshot, pattern="^upload_screenshot$"))
 
 # --- Verification Handlers ---
 for handler in get_callback_handlers():
@@ -59,36 +50,21 @@ async def home():
 async def webhook():
     update_json = await request.get_json()
     logging.info(f"📩 Received update: {update_json}")
-
     if update_json:
         update_obj = Update.de_json(update_json, bot_app.bot)
         await bot_app.process_update(update_obj)
-
     return "OK", 200
 
 # --- Webhook Setup ---
+@app.before_serving
 async def setup_webhook():
-    """Set up the webhook asynchronously"""
     try:
-        await bot_app.initialize()
-        await bot_app.start()
         await bot_app.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
         logging.info("✅ Webhook set successfully")
     except Exception as e:
         logging.error(f"❌ Error setting webhook: {e}")
 
 # --- Start Bot + Server ---
-def start():
-    logging.info("🚀 Starting bot and server...")
-    
-    # Import asyncio for running async functions
-    import asyncio
-    
-    # Set up webhook before starting server
-    asyncio.run(setup_webhook())
-    
-    # Start the Quart app
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
-
 if __name__ == "__main__":
-    start()
+    logging.info("🚀 Starting server...")
+    uvicorn.run(app, host="0.0.0.0", port=PORT)
