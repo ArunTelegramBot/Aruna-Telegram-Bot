@@ -76,6 +76,11 @@ async def handle_payment_method(update: Update, context: CallbackContext):
                 photo=open(qr_path, "rb"),
                 caption="📸 Scan this QR Code to make the payment.\nAfter payment, send a screenshot for verification. 😘",
             )
+            # Add upload button after the photo
+            await query.message.reply_text(
+                "📤 Upload your payment screenshot here for verification:",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📤 Upload Screenshot", callback_data="upload_screenshot")]])
+            )
         except Exception as e:
             await query.message.reply_text(f"❌ Error loading QR Code: {str(e)}")
     elif data.startswith("pay_upi"):
@@ -85,7 +90,35 @@ async def handle_payment_method(update: Update, context: CallbackContext):
             f"🏦 Click below to pay ₹{amount} via UPI.\nAfter payment, send a screenshot for verification.",
             reply_markup=InlineKeyboardMarkup(buttons)
         )
+        # Add upload button after the UPI link
+        await query.message.reply_text(
+            "📤 Upload your payment screenshot here for verification:",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📤 Upload Screenshot", callback_data="upload_screenshot")]])
+        )
 
     await query.edit_message_text(
         f"✅ Payment method selected for ₹{amount}. Follow instructions below.",
     )
+
+# New handler for upload screenshot button
+async def handle_upload_screenshot(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()
+    await query.message.reply_text(
+        "📤 Please send your payment screenshot as a photo. It will be processed for verification."
+    )
+    # Note: You need to add a message handler for photos in your main bot file to handle the uploaded image and call verification.py
+    # For example, in your main.py or wherever handlers are added:
+    # from telegram.ext import MessageHandler, filters
+    # application.add_handler(MessageHandler(filters.PHOTO, handle_photo_upload))
+    # 
+    # async def handle_photo_upload(update: Update, context: CallbackContext):
+    #     # Download the photo and pass to verification.py
+    #     photo = update.message.photo[-1]  # Get the highest resolution
+    #     file = await photo.get_file()
+    #     file_path = f"temp_{update.effective_user.id}.jpg"
+    #     await file.download_to_drive(file_path)
+    #     # Call verification.py logic here, e.g., import and run verification function
+    #     # from verification import verify_payment
+    #     # result = verify_payment(file_path, update.effective_user.id)
+    #     # Then respond based on result
