@@ -66,18 +66,29 @@ async def webhook():
 
     return "OK", 200
 
+# --- Webhook Setup ---
+async def setup_webhook():
+    """Set up the webhook asynchronously"""
+    try:
+        await bot_app.initialize()
+        await bot_app.start()
+        await bot_app.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
+        logging.info("✅ Webhook set successfully")
+    except Exception as e:
+        logging.error(f"❌ Error setting webhook: {e}")
+
 # --- Start Bot + Server ---
 def start():
     logging.info("🚀 Starting bot and server...")
-    try:
-        # Set up webhook
-        await bot_app.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
-        logging.info("✅ Webhook set successfully")
-        
-        # Start the Quart app
-        uvicorn.run(app, host="0.0.0.0", port=PORT)
-    except Exception as e:
-        logging.error(f"❌ Error starting bot: {e}")
+    
+    # Import asyncio for running async functions
+    import asyncio
+    
+    # Set up webhook before starting server
+    asyncio.run(setup_webhook())
+    
+    # Start the Quart app
+    uvicorn.run(app, host="0.0.0.0", port=PORT)
 
 if __name__ == "__main__":
     start()
