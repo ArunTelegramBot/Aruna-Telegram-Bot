@@ -32,10 +32,18 @@ bot_app.add_handler(CommandHandler("payment", payment_info))
 bot_app.add_handler(CommandHandler("help", help_command))
 
 # --- CallbackQuery Handlers ---
-bot_app.add_handler(CallbackQueryHandler(menu_button_handler, pattern="^(payment_info|help_info)$"))
-bot_app.add_handler(CallbackQueryHandler(handle_payment_selection, pattern="^(sub_1w|sub_1m)$"))
-bot_app.add_handler(CallbackQueryHandler(handle_payment_method, pattern="^(pay_qr_|pay_upi_)$"))
-bot_app.add_handler(CallbackQueryHandler(handle_upload_screenshot, pattern="^upload_screenshot$"))
+bot_app.add_handler(
+    CallbackQueryHandler(menu_button_handler, pattern="^(payment_info|help_info)$")
+)
+bot_app.add_handler(
+    CallbackQueryHandler(handle_payment_selection, pattern="^(sub_1w|sub_1m)$")
+)
+bot_app.add_handler(
+    CallbackQueryHandler(handle_payment_method, pattern="^(pay_qr_|pay_upi_).*")  # FIXED
+)
+bot_app.add_handler(
+    CallbackQueryHandler(handle_upload_screenshot, pattern="^upload_screenshot$")
+)
 
 # --- Verification Handlers ---
 for handler in get_callback_handlers():
@@ -59,7 +67,7 @@ async def webhook():
 @app.before_serving
 async def startup():
     logging.info("🚀 Initializing bot...")
-    await bot_app.initialize()  # Initialize Application (mandatory)
+    await bot_app.initialize()  # Initialize bot
     await bot_app.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
     logging.info("✅ Webhook set and bot initialized successfully")
 
