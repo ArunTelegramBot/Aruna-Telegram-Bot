@@ -4,7 +4,6 @@ from telegram.ext import CallbackContext
 
 UPI_ID = "BHARATPE09895529437@yesbankltd"
 
-# Subscription buttons
 SUBSCRIPTION_OPTIONS = [
     [
         InlineKeyboardButton("✅ 1 Week – ₹199", callback_data="sub_1w"),
@@ -12,7 +11,6 @@ SUBSCRIPTION_OPTIONS = [
     ]
 ]
 
-# Store pending transactions (user_id -> plan)
 pending_transactions = {}
 
 async def payment_info(update: Update, context: CallbackContext):
@@ -31,21 +29,17 @@ async def handle_payment_selection(update: Update, context: CallbackContext):
     await query.answer()
 
     if query.data == "sub_1w":
-        plan_name = "1 Week"
-        amount = 199
-        desc = "🔥 Sizzling tease!"
-        direct_link = f"https://www.upi.me/pay?pa={UPI_ID}&am=199&tn=VIP%20subscription"
+        plan_name, amount, desc = "1 Week", 199, "🔥 Sizzling tease!"
     elif query.data == "sub_1m":
-        plan_name = "1 Month"
-        amount = 299
-        desc = "💋 Endless heat!"
-        direct_link = f"https://www.upi.me/pay?pa={UPI_ID}&am=299&tn=VIP%20subscription"
+        plan_name, amount, desc = "1 Month", 299, "💋 Endless heat!"
     else:
         await query.edit_message_text("❌ Invalid plan selection.")
         return
 
     user_id = query.from_user.id
     pending_transactions[user_id] = {"plan": plan_name, "amount": amount}
+
+    direct_link = f"https://www.upi.me/pay?pa={UPI_ID}&am={amount}&tn=VIP%20subscription"
 
     buttons = [
         [
@@ -76,31 +70,22 @@ async def handle_payment_method(update: Update, context: CallbackContext):
                 photo=open(qr_path, "rb"),
                 caption="📸 Scan this QR Code to make the payment.\nAfter payment, send a screenshot for verification. 😘",
             )
-            # Add upload button after the photo
-            await query.message.reply_text(
-                "📤 Upload your payment screenshot here for verification:",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📤 Upload Screenshot", callback_data="upload_screenshot")]])
-            )
         except Exception as e:
             await query.message.reply_text(f"❌ Error loading QR Code: {str(e)}")
     elif data.startswith("pay_upi"):
-        link = f"https://www.upi.me/pay?pa={UPI_ID}&am={amount}&tn=VPI%20subscription"  # Note: Fixed typo from "VPI" to "VIP" if intended
+        link = f"https://www.upi.me/pay?pa={UPI_ID}&am={amount}&tn=VIP%20subscription"
         buttons = [[InlineKeyboardButton("💳 Pay via UPI App", url=link)]]
         await query.message.reply_text(
             f"🏦 Click below to pay ₹{amount} via UPI.\nAfter payment, send a screenshot for verification.",
             reply_markup=InlineKeyboardMarkup(buttons)
         )
-        # Add upload button after the UPI link
-        await query.message.reply_text(
-            "📤 Upload your payment screenshot here for verification:",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📤 Upload Screenshot", callback_data="upload_screenshot")]])
-        )
 
-    await query.edit_message_text(
-        f"✅ Payment method selected for ₹{amount}. Follow instructions below.",
+    # Upload button for both methods
+    await query.message.reply_text(
+        "📤 Upload your payment screenshot here for verification:",
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📤 Upload Screenshot", callback_data="upload_screenshot")]])
     )
 
-# NEW: Add this function to handle the "Upload Screenshot" button click
 async def handle_upload_screenshot(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
