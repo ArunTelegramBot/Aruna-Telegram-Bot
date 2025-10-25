@@ -55,16 +55,21 @@ async def webhook():
         await bot_app.process_update(update_obj)
     return "OK", 200
 
-# --- Webhook Setup ---
+# --- Initialize Bot & Set Webhook ---
 @app.before_serving
-async def setup_webhook():
-    try:
-        await bot_app.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
-        logging.info("✅ Webhook set successfully")
-    except Exception as e:
-        logging.error(f"❌ Error setting webhook: {e}")
+async def startup():
+    logging.info("🚀 Initializing bot...")
+    await bot_app.initialize()  # Initialize Application (mandatory)
+    await bot_app.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
+    logging.info("✅ Webhook set and bot initialized successfully")
 
-# --- Start Bot + Server ---
+@app.after_serving
+async def shutdown():
+    logging.info("🛑 Closing bot...")
+    await bot_app.shutdown()
+    logging.info("✅ Bot shut down cleanly")
+
+# --- Start Quart Server ---
 if __name__ == "__main__":
-    logging.info("🚀 Starting server...")
+    logging.info("🚀 Starting Quart server...")
     uvicorn.run(app, host="0.0.0.0", port=PORT)
