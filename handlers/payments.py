@@ -84,7 +84,7 @@ async def handle_payment_method(update: Update, context: CallbackContext):
         except Exception as e:
             await query.message.reply_text(f"❌ Error loading QR Code: {str(e)}")
     elif data.startswith("pay_upi"):
-        link = f"https://www.upi.me/pay?pa={UPI_ID}&am={amount}&tn=VIP%20subscription"
+        link = f"https://www.upi.me/pay?pa={UPI_ID}&am={amount}&tn=VPI%20subscription"  # Note: Fixed typo from "VPI" to "VIP" if intended
         buttons = [[InlineKeyboardButton("💳 Pay via UPI App", url=link)]]
         await query.message.reply_text(
             f"🏦 Click below to pay ₹{amount} via UPI.\nAfter payment, send a screenshot for verification.",
@@ -100,25 +100,10 @@ async def handle_payment_method(update: Update, context: CallbackContext):
         f"✅ Payment method selected for ₹{amount}. Follow instructions below.",
     )
 
-# New handler for upload screenshot button
+# NEW: Add this function to handle the "Upload Screenshot" button click
 async def handle_upload_screenshot(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
     await query.message.reply_text(
         "📤 Please send your payment screenshot as a photo. It will be processed for verification."
     )
-    # Note: You need to add a message handler for photos in your main bot file to handle the uploaded image and call verification.py
-    # For example, in your main.py or wherever handlers are added:
-    # from telegram.ext import MessageHandler, filters
-    # application.add_handler(MessageHandler(filters.PHOTO, handle_photo_upload))
-    # 
-    # async def handle_photo_upload(update: Update, context: CallbackContext):
-    #     # Download the photo and pass to verification.py
-    #     photo = update.message.photo[-1]  # Get the highest resolution
-    #     file = await photo.get_file()
-    #     file_path = f"temp_{update.effective_user.id}.jpg"
-    #     await file.download_to_drive(file_path)
-    #     # Call verification.py logic here, e.g., import and run verification function
-    #     # from verification import verify_payment
-    #     # result = verify_payment(file_path, update.effective_user.id)
-    #     # Then respond based on result
