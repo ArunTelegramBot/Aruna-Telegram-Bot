@@ -43,11 +43,13 @@ async def handle_payment_selection(update: Update, context: CallbackContext):
 
     buttons = [
         [
-            InlineKeyboardButton("📸 Pay via QR Code", callback_data=f"pay_qr_{amount}"),
-            InlineKeyboardButton("🏦 Pay via UPI ID", callback_data=f"pay_upi_{amount}")
+            InlineKeyboardButton("📸 Pay via QR Code", callback_data=f"pay_qr_{amount}")
         ],
         [
             InlineKeyboardButton("💰 Pay Directly", url=direct_link)
+        ],
+        [
+            InlineKeyboardButton("❓ Need Help?", callback_data="help_info")
         ]
     ]
 
@@ -72,18 +74,13 @@ async def handle_payment_method(update: Update, context: CallbackContext):
             )
         except Exception as e:
             await query.message.reply_text(f"❌ Error loading QR Code: {str(e)}")
-    elif data.startswith("pay_upi"):
-        link = f"https://www.upi.me/pay?pa={UPI_ID}&am={amount}&tn=VIP%20subscription"
-        buttons = [[InlineKeyboardButton("💳 Pay via UPI App", url=link)]]
-        await query.message.reply_text(
-            f"🏦 Click below to pay ₹{amount} via UPI.\nAfter payment, send a screenshot for verification.",
-            reply_markup=InlineKeyboardMarkup(buttons)
-        )
 
-    # Upload button for both methods
+    # Upload button for payment screenshot
     await query.message.reply_text(
         "📤 Upload your payment screenshot here for verification:",
-        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📤 Upload Screenshot", callback_data="upload_screenshot")]])
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("📤 Upload Screenshot", callback_data="upload_screenshot")]
+        ])
     )
 
 async def handle_upload_screenshot(update: Update, context: CallbackContext):
