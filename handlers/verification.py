@@ -6,35 +6,30 @@ ADMIN_GROUP_ID = -1002594045216
 GROUP_LINK = "https://t.me/+kbMWRA7RG0FiZTM1"
 
 async def verify_payment(update: Update, context: CallbackContext):
-    user_id = update.message.from_user.id
-    username = update.message.from_user.username
+    user = update.message.from_user
+    user_id = user.id
+    username = user.username if user.username else "No Username"
 
     if user_id not in pending_transactions:
-        await update.message.reply_text("❌ No pending payment to verify. Please select a plan first.")
+        await update.message.reply_text("❌ No pending payment.")
         return
+
+    plan_info = pending_transactions[user_id]
+
+    keyboard = [
+        [InlineKeyboardButton("✅ Approve", callback_data=f"approve_{user_id}"),
+         InlineKeyboardButton("❌ Reject", callback_data=f"reject_{user_id}")]
+    ]
 
     if update.message.photo:
         photo = update.message.photo[-1]
         file = await photo.get_file()
-        plan_info = pending_transactions[user_id]
-        plan_name, amount = plan_info["plan"], plan_info["amount"]
-
-        keyboard = [
-            [InlineKeyboardButton("✅ Approve", callback_data=f"approve_{user_id}"),
-             InlineKeyboardButton("❌ Reject", callback_data=f"reject_{user_id}")]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
 
         await context.bot.send_photo(
             chat_id=ADMIN_GROUP_ID,
             photo=file.file_id,
-            caption=(
-                f"📢 *New payment pending approval!*\n"
-                f"👤 User: @{username} ({user_id})\n"
-                f"💰 Plan: {plan_name} – ₹{amount}"
-            ),
-            parse_mode="Markdown",
-            reply_markup=reply_markup
+            caption=f"👤 @{username}\n💰 {plan_info['plan']} – ₹{plan_info['amount']}",
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
 async def handle_approval(update: Update, context: CallbackContext):
@@ -43,22 +38,14 @@ async def handle_approval(update: Update, context: CallbackContext):
     user_id = int(user_id)
 
     if action == "approve":
-        await context.bot.send_message(
-            chat_id=user_id,
-            text=f"✅ Your payment has been approved!\nAccess link: {GROUP_LINK}"
-        )
-        await query.edit_message_text("✅ Payment approved.")
+        await context.bot.send_message(user_id, f"✅ Approved!\n{GROUP_LINK}")
     else:
-        await context.bot.send_message(
-            chat_id=user_id,
-            text="❌ Your payment was rejected. Contact support for details."
-        )
-        await query.edit_message_text("❌ Payment rejected.")
+        await context.bot.send_message(user_id, "❌ Rejected.")
 
     pending_transactions.pop(user_id, None)
     await query.answer()
 
-verification_handler = MessageHandler(filters.PHOTO & ~filters.COMMAND, verify_payment)
+verification_handler = MessageHandler(filters.PHOTO, verify_payment)
 approval_handler = CallbackQueryHandler(handle_approval, pattern="^(approve|reject)_")
 
 def get_callback_handlers():
