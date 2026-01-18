@@ -3,13 +3,20 @@ import logging
 import uvicorn
 from quart import Quart, request
 from telegram import Update
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 
 from handlers.verification import get_callback_handlers
 from handlers.start import start_command
 from handlers.menu import menu_button_handler
 from handlers.help import help_command
-from handlers.payments import payment_info, handle_payment_selection, handle_payment_method, handle_upload_screenshot
+from handlers.payments import (
+    payment_info,
+    handle_payment_selection,
+    handle_payment_method,
+    handle_upload_screenshot,
+    handle_country_selection,   # ➕ Added
+    handle_email_input          # ➕ Added
+)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -23,7 +30,6 @@ if not TOKEN or not WEBHOOK_URL:
     logging.error("❌ BOT_TOKEN or WEBHOOK_URL not defined.")
     exit(1)
 
-# --- Initialize Bot Application ---
 bot_app = Application.builder().token(TOKEN).build()
 
 # --- Command Handlers ---
@@ -32,24 +38,25 @@ bot_app.add_handler(CommandHandler("payment", payment_info))
 bot_app.add_handler(CommandHandler("help", help_command))
 
 # --- CallbackQuery Handlers ---
-bot_app.add_handler(
-    CallbackQueryHandler(menu_button_handler, pattern="^(payment_info|help_info)$")
-)
-bot_app.add_handler(
-    CallbackQueryHandler(handle_payment_selection, pattern="^(sub_1w|sub_1m)$")
-)
-bot_app.add_handler(
-    CallbackQueryHandler(handle_payment_method, pattern="^(pay_qr_|pay_upi_).*")  # FIXED
-)
-bot_app.add_handler(
-    CallbackQueryHandler(handle_upload_screenshot, pattern="^upload_screenshot$")
-)
+bot_app.add_handler(CallbackQueryHandler(menu_button_handler, pattern="^(payment_info|help_info)$"))
+bot_app.add_handler(CallbackQueryHandler(handle_payment_selection, pattern="^(sub_1w|sub_1m)$"))
+
+# Existing payment method handler
+bot_app.add_handler(CallbackQueryHandler(handle_payment_method, pattern="^(pay_qr_|pay_upi_|pay_card).*"))
+
+# Screenshot upload handler
+bot_app.add_handler(CallbackQueryHandler(handle_upload_screenshot, pattern="^upload_screenshot$"))
+
+# ➕ Country selection handler (only for international payments)
+bot_app.add_handler(CallbackQueryHandler(handle_country_selection, pattern="^country_"))
+
+# ➕ Email input handler
+bot_app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_email_input))
 
 # --- Verification Handlers ---
 for handler in get_callback_handlers():
     bot_app.add_handler(handler)
 
-# --- Webhook Routes ---
 @app.route("/", methods=["GET"])
 async def home():
     return "Bot is running!", 200
@@ -58,16 +65,17 @@ async def home():
 async def webhook():
     update_json = await request.get_json()
     logging.info(f"📩 Received update: {update_json}")
+
     if update_json:
         update_obj = Update.de_json(update_json, bot_app.bot)
         await bot_app.process_update(update_obj)
+
     return "OK", 200
 
-# --- Initialize Bot & Set Webhook ---
 @app.before_serving
 async def startup():
     logging.info("🚀 Initializing bot...")
-    await bot_app.initialize()  # Initialize bot
+    await bot_app.initialize()
     await bot_app.bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
     logging.info("✅ Webhook set and bot initialized successfully")
 
@@ -77,7 +85,6 @@ async def shutdown():
     await bot_app.shutdown()
     logging.info("✅ Bot shut down cleanly")
 
-# --- Start Quart Server ---
 if __name__ == "__main__":
     logging.info("🚀 Starting Quart server...")
     uvicorn.run(app, host="0.0.0.0", port=PORT)
